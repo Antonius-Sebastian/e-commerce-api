@@ -1,0 +1,94 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  user_id   String   @id @default(cuid())
+  name      String
+  email        String   @unique
+  password     String
+  address      String
+  phone_number String @unique
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  role         Role     @default(USER)
+  orders       Order[]
+}
+
+model Product {
+  product_id   Int       @id @default(autoincrement())
+  name         String
+  base_price   Decimal   @db.Decimal(10, 2)
+  category_id  Int
+  description  String
+  material     String
+  brand        String
+  image_url    String
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+
+  category     Category  @relation(fields: [category_id], references: [category_id])
+  variants     ProductVariant[]
+}
+
+model ProductVariant {
+  variant_id      Int      @id @default(autoincrement())
+  product_id      Int
+  color           String
+  size            String
+  price           Decimal  @db.Decimal(10, 2)
+  stock_quantity  Int
+
+  product         Product  @relation(fields: [product_id], references: [product_id])
+  orderItems      OrderItem[]
+
+  @@unique([product_id, color, size]) 
+}
+
+model Category {
+  category_id Int      @id @default(autoincrement())
+  name        String
+  description String
+
+  products    Product[]
+}
+
+model Order {
+  order_id    String    @id @default(cuid())
+  user_id     String
+  order_date  DateTime
+  status      String
+  total_price Decimal   @db.Decimal(10, 2)
+
+  user        User      @relation(fields: [user_id], references: [user_id])
+  orderItems  OrderItem[]
+
+}
+
+model OrderItem {
+  order_item_id       Int     @id @default(autoincrement())
+  order_id            String
+  product_variant_id  Int
+  quantity            Int
+  price               Decimal @db.Decimal(10, 2)
+
+  order               Order   @relation(fields: [order_id], references: [order_id])
+  productVariant      ProductVariant @relation(fields: [product_variant_id], references: [variant_id])
+
+}
+
+enum Role {
+  USER
+  ADMIN 
+}
