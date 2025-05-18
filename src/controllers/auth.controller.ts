@@ -41,11 +41,6 @@ export const signIn = async (
 
         const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1d' })
 
-        // * Log for debugging
-        console.log(user)
-        console.log(payload)
-        console.log(token)
-
         res.json({ status: 'success', data: { user, token } })
     } catch (error) {
         next(error)
@@ -91,15 +86,8 @@ export const signUp = async (
         }
         const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1d' })
 
-        // * log for debugging
-        console.log(payload)
-        console.log(user)
-        console.log(hashedPassword)
-        console.log(token)
-
         res.status(201).json({ status: 'success', data: { user, token } })
     } catch (error) {
-        // TODO: Handle prisma error
         next(error)
     }
 }

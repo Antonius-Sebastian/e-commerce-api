@@ -53,11 +53,6 @@ export const getUser = async (
             },
         })
 
-        // * Log for debugging
-        console.log('get user')
-        console.log(user_id)
-        console.log(user)
-
         if (!user) {
             return next(createError(USER_ERRORS.NOT_FOUND))
         }
@@ -70,21 +65,17 @@ export const getUser = async (
 
 // TODO: search based on query, username, email, role
 export const searchUsers = async (req: Request, res: Response, next: NextFunction) => {
-    const { keyword } = req.query
+    const { query } = req.query
 
     try {
         const users = await prisma.user.findMany({
             where: {
                 OR: [
-                    { name: { contains: String(keyword), mode: 'insensitive' } },
-                    { email: { contains: String(keyword), mode: 'insensitive' } },
+                    { name: { contains: String(query), mode: 'insensitive' } },
+                    { email: { contains: String(query), mode: 'insensitive' } },
                 ],
             },
         })
-        // * Log for debugging
-        console.log('search user')
-        console.log(keyword)
-        console.log(users)
 
         res.json({ status: 'success', data: { users } })
     } catch (error) {
@@ -124,14 +115,8 @@ export const addUser = async (
             },
         })
 
-        // * Log for debugging
-        console.log('add user')
-        console.log(user)
-        console.log(hashedPassword)
-
         res.json({ status: 'success', data: { user } })
     } catch (error) {
-        // TODO: Handle prisma error
         next(error)
     }
 }
@@ -185,15 +170,8 @@ export const updateUser = async (
             },
         })
 
-        // * Log for debugging
-        console.log('update user')
-        console.log(user_id)
-        console.log(existingUser)
-        console.log(user)
-
         res.json({ status: 'success', data: { user } })
     } catch (error) {
-        // TODO: Handle prisma error
         next(error)
     }
 }

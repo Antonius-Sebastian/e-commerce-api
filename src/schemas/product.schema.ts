@@ -1,5 +1,18 @@
 import { z } from 'zod'
 
+// Helper function to handle string inputs and parse JSON
+function parseJsonString<T extends z.ZodTypeAny>(schema: T) {
+    return z.preprocess((input) => {
+        if (typeof input === 'string') {
+            try {
+                return JSON.parse(input)
+            } catch (e) {
+                return input
+            }
+        }
+        return input
+    }, schema)
+}
 export const categorySchema = z.object({
     name: z
         .string()
@@ -52,7 +65,7 @@ export const productSchema = z.object({
         .number()
         .positive('Base price must be greater than 0')
         .transform((val) => Math.round(val * 100) / 100), // Round to 2 decimal places
-    category_id: z
+    category_id: z.coerce
         .number()
         .int('Category ID must be a whole number')
         .positive('Category ID must be positive'),
@@ -74,11 +87,13 @@ export const productSchema = z.object({
     image_url: z
         .string()
         .url('Image URL must be a valid URL')
-        .startsWith('https://', 'Image URL must use HTTPS for security'),
-    variants: z.array(createProductVariantSchema).optional(),
+        .startsWith('https://', 'Image URL must use HTTPS for security')
+        .optional(),
+    variants: parseJsonString(z.array(createProductVariantSchema).optional()),
 })
 
 export type CategoryInput = z.infer<typeof categorySchema>
 export type ProductInput = z.infer<typeof productSchema>
 export type CreateProductVariantInput = z.infer<typeof createProductVariantSchema>
-export type ProductVariantInput = z.infer<typeof productVariantSchema>
+export type ProductVariantInput = z.infer<typeof createProductVariantSchema>
+export type ProductVariantUpdate = z.infer<typeof productVariantSchema>

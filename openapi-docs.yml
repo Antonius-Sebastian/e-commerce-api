@@ -1,0 +1,1770 @@
+openapi: 3.0.0
+info:
+    version: 1.0.0
+    title: E-commerce API
+    description: E-commerce API documentations
+servers:
+    - url: https://project-latihan-457008.et.r.appspot.com/api
+components:
+    securitySchemes:
+        bearerAuth:
+            type: http
+            scheme: bearer
+            bearerFormat: JWT
+    schemas:
+        UserSignUp:
+            type: object
+            properties:
+                name:
+                    type: string
+                    minLength: 2
+                    example: John Doe
+                email:
+                    type: string
+                    format: email
+                    example: john@example.com
+                password:
+                    type: string
+                    minLength: 8
+                    pattern: ^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$
+                    example: P@ssw0rd123
+                address:
+                    type: string
+                    minLength: 5
+                    maxLength: 100
+                    example: 123 Main St
+                phone_number:
+                    type: string
+                    pattern: ^\d{10,15}$
+                    example: '1234567890'
+            required:
+                - name
+                - email
+                - password
+                - address
+                - phone_number
+        UserSignIn:
+            type: object
+            properties:
+                email:
+                    type: string
+                    format: email
+                    example: john@example.com
+                password:
+                    type: string
+                    minLength: 1
+                    example: P@ssw0rd123
+            required:
+                - email
+                - password
+        Product:
+            type: object
+            properties:
+                name:
+                    type: string
+                    minLength: 3
+                    maxLength: 100
+                base_price:
+                    type: number
+                    minimum: 0
+                    exclusiveMinimum: true
+                category_id:
+                    type: integer
+                    minimum: 0
+                    exclusiveMinimum: true
+                description:
+                    type: string
+                    minLength: 20
+                    maxLength: 2000
+                material:
+                    type: string
+                    minLength: 2
+                    maxLength: 50
+                brand:
+                    type: string
+                    minLength: 2
+                    maxLength: 50
+                image_url:
+                    type: string
+                    format: uri
+                variants:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            color:
+                                type: string
+                                minLength: 2
+                                maxLength: 30
+                            size:
+                                type: string
+                                minLength: 1
+                                maxLength: 20
+                            price:
+                                type: number
+                                minimum: 0
+                                exclusiveMinimum: true
+                            stock_quantity:
+                                type: integer
+                                minimum: 0
+                                default: 0
+                        required:
+                            - color
+                            - size
+                            - price
+            required:
+                - name
+                - base_price
+                - category_id
+                - description
+                - material
+                - brand
+        ProductVariant:
+            type: object
+            properties:
+                color:
+                    type: string
+                    minLength: 2
+                    maxLength: 30
+                size:
+                    type: string
+                    minLength: 1
+                    maxLength: 20
+                price:
+                    type: number
+                    minimum: 0
+                    exclusiveMinimum: true
+                stock_quantity:
+                    type: integer
+                    minimum: 0
+                    default: 0
+                product_id:
+                    type: integer
+                    minimum: 0
+                    exclusiveMinimum: true
+            required:
+                - color
+                - size
+                - price
+                - product_id
+        User:
+            type: object
+            properties:
+                name:
+                    type: string
+                    minLength: 2
+                    example: John Doe
+                email:
+                    type: string
+                    format: email
+                    example: john@example.com
+                password:
+                    type: string
+                    minLength: 8
+                    pattern: ^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$
+                    example: P@ssw0rd123
+                address:
+                    type: string
+                    minLength: 5
+                    maxLength: 100
+                    example: 123 Main St
+                phone_number:
+                    type: string
+                    pattern: ^\d{10,15}$
+                    example: '1234567890'
+                role:
+                    type: string
+                    enum:
+                        - USER
+                        - ADMIN
+            required:
+                - name
+                - email
+                - password
+                - address
+                - phone_number
+        Category:
+            type: object
+            properties:
+                name:
+                    type: string
+                    minLength: 2
+                    maxLength: 50
+                description:
+                    type: string
+                    minLength: 10
+                    maxLength: 500
+                    default: ''
+            required:
+                - name
+                - description
+        Order:
+            type: object
+            properties:
+                user_id:
+                    type: string
+                    minLength: 1
+                    example: user_123
+                order_date:
+                    type: string
+                    nullable: true
+                    default: 2025-05-18T07:36:08.823Z
+                status:
+                    type: string
+                    enum:
+                        - PENDING
+                        - PROCESSING
+                        - SHIPPED
+                        - DELIVERED
+                        - CANCELLED
+                    default: PENDING
+                total_price:
+                    type: number
+                    nullable: true
+                    minimum: 0
+                orderItems:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            product_variant_id:
+                                type: integer
+                                minimum: 0
+                                exclusiveMinimum: true
+                            quantity:
+                                type: integer
+                                minimum: 0
+                                exclusiveMinimum: true
+                            price:
+                                type: number
+                                minimum: 0
+                                exclusiveMinimum: true
+                        required:
+                            - product_variant_id
+                            - quantity
+                    minItems: 1
+                order_id:
+                    type: string
+                    minLength: 1
+            required:
+                - user_id
+                - orderItems
+                - order_id
+        CreateOrder:
+            type: object
+            properties:
+                user_id:
+                    type: string
+                    minLength: 1
+                    example: user_123
+                order_date:
+                    type: string
+                    nullable: true
+                    default: 2025-05-18T07:36:08.824Z
+                status:
+                    type: string
+                    enum:
+                        - PENDING
+                        - PROCESSING
+                        - SHIPPED
+                        - DELIVERED
+                        - CANCELLED
+                    default: PENDING
+                total_price:
+                    type: number
+                    nullable: true
+                    minimum: 0
+                orderItems:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            product_variant_id:
+                                type: integer
+                                minimum: 0
+                                exclusiveMinimum: true
+                            quantity:
+                                type: integer
+                                minimum: 0
+                                exclusiveMinimum: true
+                            price:
+                                type: number
+                                minimum: 0
+                                exclusiveMinimum: true
+                        required:
+                            - product_variant_id
+                            - quantity
+                    minItems: 1
+            required:
+                - user_id
+                - orderItems
+        UpdateOrder:
+            type: object
+            properties:
+                status:
+                    type: string
+                    enum:
+                        - PENDING
+                        - PROCESSING
+                        - SHIPPED
+                        - DELIVERED
+                        - CANCELLED
+            required:
+                - status
+        OrderItem:
+            type: object
+            properties:
+                product_variant_id:
+                    type: integer
+                    minimum: 0
+                    exclusiveMinimum: true
+                quantity:
+                    type: integer
+                    minimum: 0
+                    exclusiveMinimum: true
+                price:
+                    type: number
+                    minimum: 0
+                    exclusiveMinimum: true
+            required:
+                - product_variant_id
+                - quantity
+    parameters: {}
+paths:
+    /auth/sign-up:
+        post:
+            tags:
+                - Auth
+            description: Register a new user
+            summary: Sign up
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                name:
+                                    type: string
+                                    minLength: 2
+                                    example: John Doe
+                                email:
+                                    type: string
+                                    format: email
+                                    example: john@example.com
+                                password:
+                                    type: string
+                                    minLength: 8
+                                    pattern: ^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$
+                                    example: P@ssw0rd123
+                                address:
+                                    type: string
+                                    minLength: 5
+                                    maxLength: 100
+                                    example: 123 Main St
+                                phone_number:
+                                    type: string
+                                    pattern: ^\d{10,15}$
+                                    example: '1234567890'
+                                role:
+                                    type: string
+                                    enum:
+                                        - USER
+                                        - ADMIN
+                            required:
+                                - name
+                                - email
+                                - password
+                                - address
+                                - phone_number
+            responses:
+                '201':
+                    description: User created successfully
+                '400':
+                    description: Validation error
+                '409':
+                    description: Email already exists
+    /auth/sign-in:
+        post:
+            tags:
+                - Auth
+            description: Authenticate user and return token
+            summary: Sign in
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                email:
+                                    type: string
+                                    format: email
+                                    example: john@example.com
+                                password:
+                                    type: string
+                                    minLength: 1
+                                    example: P@ssw0rd123
+                            required:
+                                - email
+                                - password
+            responses:
+                '200':
+                    description: Login successful, returns access token
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    accessToken:
+                                        type: string
+                                        example: your.jwt.token.here
+                                required:
+                                    - accessToken
+                '401':
+                    description: Unauthorized - invalid credentials
+    /products:
+        get:
+            tags:
+                - Products
+            summary: List all products
+            responses:
+                '200':
+                    description: Array of products
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        name:
+                                            type: string
+                                            minLength: 3
+                                            maxLength: 100
+                                        base_price:
+                                            type: number
+                                            minimum: 0
+                                            exclusiveMinimum: true
+                                        category_id:
+                                            type: integer
+                                            minimum: 0
+                                            exclusiveMinimum: true
+                                        description:
+                                            type: string
+                                            minLength: 20
+                                            maxLength: 2000
+                                        material:
+                                            type: string
+                                            minLength: 2
+                                            maxLength: 50
+                                        brand:
+                                            type: string
+                                            minLength: 2
+                                            maxLength: 50
+                                        image_url:
+                                            type: string
+                                            format: uri
+                                        variants:
+                                            type: array
+                                            items:
+                                                type: object
+                                                properties:
+                                                    color:
+                                                        type: string
+                                                        minLength: 2
+                                                        maxLength: 30
+                                                    size:
+                                                        type: string
+                                                        minLength: 1
+                                                        maxLength: 20
+                                                    price:
+                                                        type: number
+                                                        minimum: 0
+                                                        exclusiveMinimum: true
+                                                    stock_quantity:
+                                                        type: integer
+                                                        minimum: 0
+                                                        default: 0
+                                                required:
+                                                    - color
+                                                    - size
+                                                    - price
+                                    required:
+                                        - name
+                                        - base_price
+                                        - category_id
+                                        - description
+                                        - material
+                                        - brand
+        post:
+            tags:
+                - Products
+            summary: Create a product
+            description: Only admins can create a product
+            security:
+                - bearerAuth: []
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                name:
+                                    type: string
+                                    minLength: 3
+                                    maxLength: 100
+                                base_price:
+                                    type: number
+                                    minimum: 0
+                                    exclusiveMinimum: true
+                                category_id:
+                                    type: integer
+                                    minimum: 0
+                                    exclusiveMinimum: true
+                                description:
+                                    type: string
+                                    minLength: 20
+                                    maxLength: 2000
+                                material:
+                                    type: string
+                                    minLength: 2
+                                    maxLength: 50
+                                brand:
+                                    type: string
+                                    minLength: 2
+                                    maxLength: 50
+                                image_url:
+                                    type: string
+                                    format: uri
+                                variants:
+                                    type: array
+                                    items:
+                                        type: object
+                                        properties:
+                                            color:
+                                                type: string
+                                                minLength: 2
+                                                maxLength: 30
+                                            size:
+                                                type: string
+                                                minLength: 1
+                                                maxLength: 20
+                                            price:
+                                                type: number
+                                                minimum: 0
+                                                exclusiveMinimum: true
+                                            stock_quantity:
+                                                type: integer
+                                                minimum: 0
+                                                default: 0
+                                        required:
+                                            - color
+                                            - size
+                                            - price
+                            required:
+                                - name
+                                - base_price
+                                - category_id
+                                - description
+                                - material
+                                - brand
+            responses:
+                '201':
+                    description: Product created
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    name:
+                                        type: string
+                                        minLength: 3
+                                        maxLength: 100
+                                    base_price:
+                                        type: number
+                                        minimum: 0
+                                        exclusiveMinimum: true
+                                    category_id:
+                                        type: integer
+                                        minimum: 0
+                                        exclusiveMinimum: true
+                                    description:
+                                        type: string
+                                        minLength: 20
+                                        maxLength: 2000
+                                    material:
+                                        type: string
+                                        minLength: 2
+                                        maxLength: 50
+                                    brand:
+                                        type: string
+                                        minLength: 2
+                                        maxLength: 50
+                                    image_url:
+                                        type: string
+                                        format: uri
+                                    variants:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                color:
+                                                    type: string
+                                                    minLength: 2
+                                                    maxLength: 30
+                                                size:
+                                                    type: string
+                                                    minLength: 1
+                                                    maxLength: 20
+                                                price:
+                                                    type: number
+                                                    minimum: 0
+                                                    exclusiveMinimum: true
+                                                stock_quantity:
+                                                    type: integer
+                                                    minimum: 0
+                                                    default: 0
+                                            required:
+                                                - color
+                                                - size
+                                                - price
+                                required:
+                                    - name
+                                    - base_price
+                                    - category_id
+                                    - description
+                                    - material
+                                    - brand
+                '403':
+                    description: Forbidden - Admins only
+    /products/{product_id}:
+        get:
+            tags:
+                - Products
+            summary: Get single product by ID
+            parameters:
+                - schema:
+                      type: string
+                      example: '1'
+                  required: true
+                  name: product_id
+                  in: path
+            responses:
+                '200':
+                    description: Product found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    name:
+                                        type: string
+                                        minLength: 3
+                                        maxLength: 100
+                                    base_price:
+                                        type: number
+                                        minimum: 0
+                                        exclusiveMinimum: true
+                                    category_id:
+                                        type: integer
+                                        minimum: 0
+                                        exclusiveMinimum: true
+                                    description:
+                                        type: string
+                                        minLength: 20
+                                        maxLength: 2000
+                                    material:
+                                        type: string
+                                        minLength: 2
+                                        maxLength: 50
+                                    brand:
+                                        type: string
+                                        minLength: 2
+                                        maxLength: 50
+                                    image_url:
+                                        type: string
+                                        format: uri
+                                    variants:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                color:
+                                                    type: string
+                                                    minLength: 2
+                                                    maxLength: 30
+                                                size:
+                                                    type: string
+                                                    minLength: 1
+                                                    maxLength: 20
+                                                price:
+                                                    type: number
+                                                    minimum: 0
+                                                    exclusiveMinimum: true
+                                                stock_quantity:
+                                                    type: integer
+                                                    minimum: 0
+                                                    default: 0
+                                            required:
+                                                - color
+                                                - size
+                                                - price
+                                required:
+                                    - name
+                                    - base_price
+                                    - category_id
+                                    - description
+                                    - material
+                                    - brand
+                '404':
+                    description: Product not found
+        put:
+            tags:
+                - Products
+            summary: Update product
+            security:
+                - bearerAuth: []
+            parameters:
+                - schema:
+                      type: string
+                      example: '1'
+                  required: true
+                  name: product_id
+                  in: path
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                name:
+                                    type: string
+                                    minLength: 3
+                                    maxLength: 100
+                                base_price:
+                                    type: number
+                                    minimum: 0
+                                    exclusiveMinimum: true
+                                category_id:
+                                    type: integer
+                                    minimum: 0
+                                    exclusiveMinimum: true
+                                description:
+                                    type: string
+                                    minLength: 20
+                                    maxLength: 2000
+                                material:
+                                    type: string
+                                    minLength: 2
+                                    maxLength: 50
+                                brand:
+                                    type: string
+                                    minLength: 2
+                                    maxLength: 50
+                                image_url:
+                                    type: string
+                                    format: uri
+                                variants:
+                                    type: array
+                                    items:
+                                        type: object
+                                        properties:
+                                            color:
+                                                type: string
+                                                minLength: 2
+                                                maxLength: 30
+                                            size:
+                                                type: string
+                                                minLength: 1
+                                                maxLength: 20
+                                            price:
+                                                type: number
+                                                minimum: 0
+                                                exclusiveMinimum: true
+                                            stock_quantity:
+                                                type: integer
+                                                minimum: 0
+                                                default: 0
+                                        required:
+                                            - color
+                                            - size
+                                            - price
+                            required:
+                                - name
+                                - base_price
+                                - category_id
+                                - description
+                                - material
+                                - brand
+            responses:
+                '200':
+                    description: Product updated
+                '403':
+                    description: Forbidden
+        delete:
+            tags:
+                - Products
+            summary: Delete a product
+            security:
+                - bearerAuth: []
+            parameters:
+                - schema:
+                      type: string
+                      example: '1'
+                  required: true
+                  name: product_id
+                  in: path
+            responses:
+                '204':
+                    description: Deleted successfully
+                '403':
+                    description: Forbidden
+    /products/{product_id}/variants:
+        post:
+            tags:
+                - Products
+            summary: Add product variant
+            security:
+                - bearerAuth: []
+            parameters:
+                - schema:
+                      type: string
+                      example: '1'
+                  required: true
+                  name: product_id
+                  in: path
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                color:
+                                    type: string
+                                    minLength: 2
+                                    maxLength: 30
+                                size:
+                                    type: string
+                                    minLength: 1
+                                    maxLength: 20
+                                price:
+                                    type: number
+                                    minimum: 0
+                                    exclusiveMinimum: true
+                                stock_quantity:
+                                    type: integer
+                                    minimum: 0
+                                    default: 0
+                            required:
+                                - color
+                                - size
+                                - price
+            responses:
+                '201':
+                    description: Variant added
+    /products/variants/{variant_id}:
+        put:
+            tags:
+                - Products
+            summary: Update product variant
+            security:
+                - bearerAuth: []
+            parameters:
+                - schema:
+                      type: string
+                      example: '1'
+                  required: true
+                  name: variant_id
+                  in: path
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                color:
+                                    type: string
+                                    minLength: 2
+                                    maxLength: 30
+                                size:
+                                    type: string
+                                    minLength: 1
+                                    maxLength: 20
+                                price:
+                                    type: number
+                                    minimum: 0
+                                    exclusiveMinimum: true
+                                stock_quantity:
+                                    type: integer
+                                    minimum: 0
+                                    default: 0
+                                product_id:
+                                    type: integer
+                                    minimum: 0
+                                    exclusiveMinimum: true
+                            required:
+                                - color
+                                - size
+                                - price
+                                - product_id
+            responses:
+                '200':
+                    description: Variant updated
+        delete:
+            tags:
+                - Products
+            summary: Delete product variant
+            security:
+                - bearerAuth: []
+            parameters:
+                - schema:
+                      type: string
+                      example: '1'
+                  required: true
+                  name: variant_id
+                  in: path
+            responses:
+                '204':
+                    description: Deleted
+    /users:
+        get:
+            tags:
+                - Users
+            summary: Get all users
+            security:
+                - bearerAuth: []
+            responses:
+                '200':
+                    description: List of users
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        name:
+                                            type: string
+                                            minLength: 2
+                                            example: John Doe
+                                        email:
+                                            type: string
+                                            format: email
+                                            example: john@example.com
+                                        password:
+                                            type: string
+                                            minLength: 8
+                                            pattern: ^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$
+                                            example: P@ssw0rd123
+                                        address:
+                                            type: string
+                                            minLength: 5
+                                            maxLength: 100
+                                            example: 123 Main St
+                                        phone_number:
+                                            type: string
+                                            pattern: ^\d{10,15}$
+                                            example: '1234567890'
+                                        role:
+                                            type: string
+                                            enum:
+                                                - USER
+                                                - ADMIN
+                                    required:
+                                        - name
+                                        - email
+                                        - password
+                                        - address
+                                        - phone_number
+        post:
+            tags:
+                - Users
+            summary: Create a new user
+            security:
+                - bearerAuth: []
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                name:
+                                    type: string
+                                    minLength: 2
+                                    example: John Doe
+                                email:
+                                    type: string
+                                    format: email
+                                    example: john@example.com
+                                password:
+                                    type: string
+                                    minLength: 8
+                                    pattern: ^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$
+                                    example: P@ssw0rd123
+                                address:
+                                    type: string
+                                    minLength: 5
+                                    maxLength: 100
+                                    example: 123 Main St
+                                phone_number:
+                                    type: string
+                                    pattern: ^\d{10,15}$
+                                    example: '1234567890'
+                                role:
+                                    type: string
+                                    enum:
+                                        - USER
+                                        - ADMIN
+                            required:
+                                - name
+                                - email
+                                - password
+                                - address
+                                - phone_number
+            responses:
+                '201':
+                    description: User created
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    name:
+                                        type: string
+                                        minLength: 2
+                                        example: John Doe
+                                    email:
+                                        type: string
+                                        format: email
+                                        example: john@example.com
+                                    password:
+                                        type: string
+                                        minLength: 8
+                                        pattern: ^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$
+                                        example: P@ssw0rd123
+                                    address:
+                                        type: string
+                                        minLength: 5
+                                        maxLength: 100
+                                        example: 123 Main St
+                                    phone_number:
+                                        type: string
+                                        pattern: ^\d{10,15}$
+                                        example: '1234567890'
+                                    role:
+                                        type: string
+                                        enum:
+                                            - USER
+                                            - ADMIN
+                                required:
+                                    - name
+                                    - email
+                                    - password
+                                    - address
+                                    - phone_number
+    /users/search:
+        get:
+            tags:
+                - Users
+            summary: Search users
+            security:
+                - bearerAuth: []
+            parameters:
+                - schema:
+                      type: string
+                      example: john
+                  required: true
+                  name: query
+                  in: query
+            responses:
+                '200':
+                    description: Search results
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        name:
+                                            type: string
+                                            minLength: 2
+                                            example: John Doe
+                                        email:
+                                            type: string
+                                            format: email
+                                            example: john@example.com
+                                        password:
+                                            type: string
+                                            minLength: 8
+                                            pattern: ^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$
+                                            example: P@ssw0rd123
+                                        address:
+                                            type: string
+                                            minLength: 5
+                                            maxLength: 100
+                                            example: 123 Main St
+                                        phone_number:
+                                            type: string
+                                            pattern: ^\d{10,15}$
+                                            example: '1234567890'
+                                        role:
+                                            type: string
+                                            enum:
+                                                - USER
+                                                - ADMIN
+                                    required:
+                                        - name
+                                        - email
+                                        - password
+                                        - address
+                                        - phone_number
+    /users/{user_id}:
+        get:
+            tags:
+                - Users
+            summary: Get a user by ID
+            security:
+                - bearerAuth: []
+            parameters:
+                - schema:
+                      type: string
+                      example: user_123
+                  required: true
+                  name: user_id
+                  in: path
+            responses:
+                '200':
+                    description: User found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    name:
+                                        type: string
+                                        minLength: 2
+                                        example: John Doe
+                                    email:
+                                        type: string
+                                        format: email
+                                        example: john@example.com
+                                    password:
+                                        type: string
+                                        minLength: 8
+                                        pattern: ^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$
+                                        example: P@ssw0rd123
+                                    address:
+                                        type: string
+                                        minLength: 5
+                                        maxLength: 100
+                                        example: 123 Main St
+                                    phone_number:
+                                        type: string
+                                        pattern: ^\d{10,15}$
+                                        example: '1234567890'
+                                    role:
+                                        type: string
+                                        enum:
+                                            - USER
+                                            - ADMIN
+                                required:
+                                    - name
+                                    - email
+                                    - password
+                                    - address
+                                    - phone_number
+        put:
+            tags:
+                - Users
+            summary: Update user
+            security:
+                - bearerAuth: []
+            parameters:
+                - schema:
+                      type: string
+                      example: user_123
+                  required: true
+                  name: user_id
+                  in: path
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                name:
+                                    type: string
+                                    minLength: 2
+                                    example: John Doe
+                                email:
+                                    type: string
+                                    format: email
+                                    example: john@example.com
+                                password:
+                                    type: string
+                                    minLength: 8
+                                    pattern: ^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$
+                                    example: P@ssw0rd123
+                                address:
+                                    type: string
+                                    minLength: 5
+                                    maxLength: 100
+                                    example: 123 Main St
+                                phone_number:
+                                    type: string
+                                    pattern: ^\d{10,15}$
+                                    example: '1234567890'
+                                role:
+                                    type: string
+                                    enum:
+                                        - USER
+                                        - ADMIN
+                            required:
+                                - name
+                                - email
+                                - password
+                                - address
+                                - phone_number
+            responses:
+                '200':
+                    description: User updated
+        delete:
+            tags:
+                - Users
+            summary: Delete user
+            security:
+                - bearerAuth: []
+            parameters:
+                - schema:
+                      type: string
+                      example: user_123
+                  required: true
+                  name: user_id
+                  in: path
+            responses:
+                '204':
+                    description: User deleted
+    /categories:
+        get:
+            tags:
+                - Categories
+            summary: List all categories
+            responses:
+                '200':
+                    description: Array of categories
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        name:
+                                            type: string
+                                            minLength: 2
+                                            maxLength: 50
+                                        description:
+                                            type: string
+                                            minLength: 10
+                                            maxLength: 500
+                                            default: ''
+                                    required:
+                                        - name
+                                        - description
+        post:
+            tags:
+                - Categories
+            summary: Create a new category
+            security:
+                - bearerAuth: []
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                name:
+                                    type: string
+                                    minLength: 2
+                                    maxLength: 50
+                                description:
+                                    type: string
+                                    minLength: 10
+                                    maxLength: 500
+                                    default: ''
+                            required:
+                                - name
+                                - description
+            responses:
+                '201':
+                    description: Category created
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    name:
+                                        type: string
+                                        minLength: 2
+                                        maxLength: 50
+                                    description:
+                                        type: string
+                                        minLength: 10
+                                        maxLength: 500
+                                        default: ''
+                                required:
+                                    - name
+                                    - description
+    /categories/{category_id}:
+        get:
+            tags:
+                - Categories
+            summary: Get a category by ID
+            security:
+                - bearerAuth: []
+            parameters:
+                - schema:
+                      type: string
+                      example: '1'
+                  required: true
+                  name: category_id
+                  in: path
+            responses:
+                '200':
+                    description: Category found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    name:
+                                        type: string
+                                        minLength: 2
+                                        maxLength: 50
+                                    description:
+                                        type: string
+                                        minLength: 10
+                                        maxLength: 500
+                                        default: ''
+                                required:
+                                    - name
+                                    - description
+                '404':
+                    description: Category not found
+        put:
+            tags:
+                - Categories
+            summary: Update a category
+            security:
+                - bearerAuth: []
+            parameters:
+                - schema:
+                      type: string
+                      example: '1'
+                  required: true
+                  name: category_id
+                  in: path
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                name:
+                                    type: string
+                                    minLength: 2
+                                    maxLength: 50
+                                description:
+                                    type: string
+                                    minLength: 10
+                                    maxLength: 500
+                                    default: ''
+                            required:
+                                - name
+                                - description
+            responses:
+                '200':
+                    description: Category updated
+        delete:
+            tags:
+                - Categories
+            summary: Delete a category
+            security:
+                - bearerAuth: []
+            parameters:
+                - schema:
+                      type: string
+                      example: '1'
+                  required: true
+                  name: category_id
+                  in: path
+            responses:
+                '204':
+                    description: Category deleted
+    /orders:
+        get:
+            tags:
+                - Orders
+            summary: Get all orders (admin only)
+            security:
+                - bearerAuth: []
+            responses:
+                '200':
+                    description: List of orders
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        user_id:
+                                            type: string
+                                            minLength: 1
+                                            example: user_123
+                                        order_date:
+                                            type: string
+                                            nullable: true
+                                            default: 2025-05-18T07:36:08.836Z
+                                        status:
+                                            type: string
+                                            enum:
+                                                - PENDING
+                                                - PROCESSING
+                                                - SHIPPED
+                                                - DELIVERED
+                                                - CANCELLED
+                                            default: PENDING
+                                        total_price:
+                                            type: number
+                                            nullable: true
+                                            minimum: 0
+                                        orderItems:
+                                            type: array
+                                            items:
+                                                type: object
+                                                properties:
+                                                    product_variant_id:
+                                                        type: integer
+                                                        minimum: 0
+                                                        exclusiveMinimum: true
+                                                    quantity:
+                                                        type: integer
+                                                        minimum: 0
+                                                        exclusiveMinimum: true
+                                                    price:
+                                                        type: number
+                                                        minimum: 0
+                                                        exclusiveMinimum: true
+                                                required:
+                                                    - product_variant_id
+                                                    - quantity
+                                            minItems: 1
+                                        order_id:
+                                            type: string
+                                            minLength: 1
+                                    required:
+                                        - user_id
+                                        - orderItems
+                                        - order_id
+        post:
+            tags:
+                - Orders
+            summary: Create a new order
+            security:
+                - bearerAuth: []
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                user_id:
+                                    type: string
+                                    minLength: 1
+                                    example: user_123
+                                orderItems:
+                                    type: object
+                                    properties:
+                                        product_variant_id:
+                                            type: integer
+                                            minimum: 0
+                                            exclusiveMinimum: true
+                                            example: 1
+                                        quantity:
+                                            type: integer
+                                            minimum: 0
+                                            exclusiveMinimum: true
+                                            example: 5
+                                    required:
+                                        - product_variant_id
+                                        - quantity
+                            required:
+                                - user_id
+                                - orderItems
+            responses:
+                '201':
+                    description: Order created
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    user_id:
+                                        type: string
+                                        minLength: 1
+                                        example: user_123
+                                    order_date:
+                                        type: string
+                                        nullable: true
+                                        default: 2025-05-18T07:36:08.838Z
+                                    status:
+                                        type: string
+                                        enum:
+                                            - PENDING
+                                            - PROCESSING
+                                            - SHIPPED
+                                            - DELIVERED
+                                            - CANCELLED
+                                        default: PENDING
+                                    total_price:
+                                        type: number
+                                        nullable: true
+                                        minimum: 0
+                                    orderItems:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                product_variant_id:
+                                                    type: integer
+                                                    minimum: 0
+                                                    exclusiveMinimum: true
+                                                quantity:
+                                                    type: integer
+                                                    minimum: 0
+                                                    exclusiveMinimum: true
+                                                price:
+                                                    type: number
+                                                    minimum: 0
+                                                    exclusiveMinimum: true
+                                            required:
+                                                - product_variant_id
+                                                - quantity
+                                        minItems: 1
+                                    order_id:
+                                        type: string
+                                        minLength: 1
+                                required:
+                                    - user_id
+                                    - orderItems
+                                    - order_id
+    /orders/{order_id}:
+        get:
+            tags:
+                - Orders
+            summary: Get order by ID
+            security:
+                - bearerAuth: []
+            parameters:
+                - schema:
+                      type: string
+                      example: ord_789
+                  required: true
+                  name: order_id
+                  in: path
+            responses:
+                '200':
+                    description: Order details
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    user_id:
+                                        type: string
+                                        minLength: 1
+                                        example: user_123
+                                    order_date:
+                                        type: string
+                                        nullable: true
+                                        default: 2025-05-18T07:36:08.837Z
+                                    status:
+                                        type: string
+                                        enum:
+                                            - PENDING
+                                            - PROCESSING
+                                            - SHIPPED
+                                            - DELIVERED
+                                            - CANCELLED
+                                        default: PENDING
+                                    total_price:
+                                        type: number
+                                        nullable: true
+                                        minimum: 0
+                                    orderItems:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                product_variant_id:
+                                                    type: integer
+                                                    minimum: 0
+                                                    exclusiveMinimum: true
+                                                quantity:
+                                                    type: integer
+                                                    minimum: 0
+                                                    exclusiveMinimum: true
+                                                price:
+                                                    type: number
+                                                    minimum: 0
+                                                    exclusiveMinimum: true
+                                            required:
+                                                - product_variant_id
+                                                - quantity
+                                        minItems: 1
+                                    order_id:
+                                        type: string
+                                        minLength: 1
+                                required:
+                                    - user_id
+                                    - orderItems
+                                    - order_id
+        put:
+            tags:
+                - Orders
+            summary: Update order status (admin only)
+            security:
+                - bearerAuth: []
+            parameters:
+                - schema:
+                      type: string
+                      example: ord_789
+                  required: true
+                  name: order_id
+                  in: path
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                status:
+                                    type: string
+                                    enum:
+                                        - PENDING
+                                        - PROCESSING
+                                        - SHIPPED
+                                        - DELIVERED
+                                        - CANCELLED
+                            required:
+                                - status
+            responses:
+                '200':
+                    description: Order status updated
+        delete:
+            tags:
+                - Orders
+            summary: Delete an order (admin only)
+            security:
+                - bearerAuth: []
+            parameters:
+                - schema:
+                      type: string
+                      example: ord_789
+                  required: true
+                  name: order_id
+                  in: path
+            responses:
+                '204':
+                    description: Order deleted
+    /orders/user/{user_id}:
+        get:
+            tags:
+                - Orders
+            summary: Get orders for a user (admin only)
+            security:
+                - bearerAuth: []
+            parameters:
+                - schema:
+                      type: string
+                      example: user_456
+                  required: true
+                  name: user_id
+                  in: path
+            responses:
+                '200':
+                    description: User order list
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        user_id:
+                                            type: string
+                                            minLength: 1
+                                            example: user_123
+                                        order_date:
+                                            type: string
+                                            nullable: true
+                                            default: 2025-05-18T07:36:08.837Z
+                                        status:
+                                            type: string
+                                            enum:
+                                                - PENDING
+                                                - PROCESSING
+                                                - SHIPPED
+                                                - DELIVERED
+                                                - CANCELLED
+                                            default: PENDING
+                                        total_price:
+                                            type: number
+                                            nullable: true
+                                            minimum: 0
+                                        orderItems:
+                                            type: array
+                                            items:
+                                                type: object
+                                                properties:
+                                                    product_variant_id:
+                                                        type: integer
+                                                        minimum: 0
+                                                        exclusiveMinimum: true
+                                                    quantity:
+                                                        type: integer
+                                                        minimum: 0
+                                                        exclusiveMinimum: true
+                                                    price:
+                                                        type: number
+                                                        minimum: 0
+                                                        exclusiveMinimum: true
+                                                required:
+                                                    - product_variant_id
+                                                    - quantity
+                                            minItems: 1
+                                        order_id:
+                                            type: string
+                                            minLength: 1
+                                    required:
+                                        - user_id
+                                        - orderItems
+                                        - order_id
+    /orders/{order_id}/cancel:
+        put:
+            tags:
+                - Orders
+            summary: Cancel an order (user)
+            security:
+                - bearerAuth: []
+            parameters:
+                - schema:
+                      type: string
+                      example: ord_789
+                  required: true
+                  name: order_id
+                  in: path
+            responses:
+                '200':
+                    description: Order cancelled

@@ -91,11 +91,8 @@ export const deleteCategory = async (
     res: Response,
     next: NextFunction
 ) => {
-    console.log('disini')
     const category_id = parseInt(req.params.category_id, 10)
-    console.log(category_id)
     if (isNaN(category_id)) {
-        console.log('agasgoji')
         return next(createError(CATEGORY_ERRORS.INVALID_ID))
     }
 

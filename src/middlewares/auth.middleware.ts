@@ -1,10 +1,9 @@
 import { NextFunction, Request, Response } from 'express'
 import jwt, { Secret } from 'jsonwebtoken'
+import { Role } from '@prisma/client'
 
 import { JWT_SECRET } from '../config/env'
 import prisma from '../prisma/client'
-import { AppError } from '../utils/AppError'
-import { Role } from '@prisma/client'
 import { JwtPayload, User } from '../interfaces/user'
 import { createError } from '../utils/createError'
 import { AUTH_ERRORS, RESOURCE_ERRORS } from '../constants/error.constants'
@@ -42,12 +41,6 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
             },
         })
 
-        // * Log for debugging
-        console.log('protect')
-        console.log(token)
-        console.log(decoded)
-        console.log(user)
-
         if (!user) {
             return next(createError(AUTH_ERRORS.USER_NOT_FOUND))
         }
@@ -70,10 +63,6 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
 
 export const restrictTo = (...roles: Role[]) => {
     return (req: Request, res: Response, next: NextFunction) => {
-        // * Log for debugging
-        console.log('restrict to')
-        console.log(req.user)
-
         if (!req.user || !roles.includes(req.user.role)) {
             return next(createError(RESOURCE_ERRORS.UNAUTHORIZED_ACCESS))
         }

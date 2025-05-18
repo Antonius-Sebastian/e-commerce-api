@@ -13,6 +13,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
 model User {
   user_id   String   @id @default(cuid())
   name      String
@@ -25,6 +26,7 @@ model User {
   role         Role     @default(USER)
   orders       Order[]
 }
+
 
 model Product {
   product_id   Int       @id @default(autoincrement())
@@ -68,7 +70,7 @@ model Order {
   order_id    String    @id @default(cuid())
   user_id     String?
   order_date  DateTime
-  status      String
+  status      OrderStatus @default(PENDING)
   total_price Decimal   @db.Decimal(10, 2)
 
   user        User?     @relation(fields: [user_id], references: [user_id], onDelete: SetNull)
@@ -91,4 +93,12 @@ model OrderItem {
 enum Role {
   USER
   ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
 }

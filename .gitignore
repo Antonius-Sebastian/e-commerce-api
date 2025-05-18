@@ -37,3 +37,7 @@ coverage/
 # Optional: Next.js
 .next/
 out/
+
+# 
+gcs-key.json
+app.yaml

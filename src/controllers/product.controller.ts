@@ -2,8 +2,14 @@ import { Request, Response, NextFunction } from 'express'
 
 import prisma from '../prisma/client'
 import { createError } from '../utils/createError'
-import { ProductInput, ProductVariantInput } from '../schemas/product.schema'
+import {
+    ProductInput,
+    productSchema,
+    ProductVariantInput,
+    ProductVariantUpdate,
+} from '../schemas/product.schema'
 import { PRODUCT_ERRORS, PRODUCT_VARIANTS_ERRORS } from '../constants/error.constants'
+import { uploadImageToGCS } from '../utils/uploadImage'
 
 export const getProducts = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -38,11 +44,6 @@ export const getProduct = async (
             },
         })
 
-        // * Log for debugging
-        console.log('get product')
-        console.log(product_id)
-        console.log(product)
-
         if (!product) {
             return next(createError(PRODUCT_ERRORS.NOT_FOUND))
         }
@@ -67,14 +68,21 @@ export const addProduct = async (
     res: Response,
     next: NextFunction
 ) => {
-    const { variants, ...productData } = req.body
     try {
-        // validate category_id
+        const validatedBody = productSchema.parse(req.body)
+
+        const { variants, ...productData } = validatedBody
+
         const categoryExists = await prisma.category.findUnique({
             where: { category_id: productData.category_id },
         })
+
         if (!categoryExists) {
             return next(createError(PRODUCT_ERRORS.INVALID_CATEGORY))
+        }
+
+        if (req.file) {
+            productData.image_url = await uploadImageToGCS(req.file)
         }
 
         const product = await prisma.product.create({
@@ -85,7 +93,6 @@ export const addProduct = async (
                 material: productData.material,
                 brand: productData.brand,
                 image_url: productData.image_url,
-                // Use the correct relation syntax for category
                 category: {
                     connect: { category_id: productData.category_id },
                 },
@@ -95,8 +102,8 @@ export const addProduct = async (
                               create: variants.map((variant) => ({
                                   color: variant.color!,
                                   size: variant.size!,
-                                  price: variant.price!,
-                                  stock_quantity: variant.stock_quantity!,
+                                  price: variant.price || product.base_price,
+                                  stock_quantity: variant.stock_quantity || 0,
                               })),
                           }
                         : undefined,
@@ -106,12 +113,6 @@ export const addProduct = async (
                 category: true,
             },
         })
-
-        // * Log for debugging
-        console.log('add product')
-        console.log(variants)
-        console.log(productData)
-        console.log(product)
 
         res.status(201).json({ status: 'success', data: { product } })
     } catch (error) {
@@ -128,10 +129,11 @@ export const updateProduct = async (
     if (isNaN(product_id)) {
         return next(createError(PRODUCT_ERRORS.INVALID_ID))
     }
-
-    const { variants, ...productData } = req.body
-
     try {
+        const validatedBody = productSchema.parse(req.body)
+
+        const { variants, ...productData } = validatedBody
+
         const existingProduct = await prisma.product.findUnique({
             where: {
                 product_id,
@@ -142,18 +144,24 @@ export const updateProduct = async (
             return next(createError(PRODUCT_ERRORS.NOT_FOUND))
         }
 
+        const categoryExists = await prisma.category.findUnique({
+            where: { category_id: productData.category_id },
+        })
+
+        if (!categoryExists) {
+            return next(createError(PRODUCT_ERRORS.INVALID_CATEGORY))
+        }
+
+        if (req.file) {
+            productData.image_url = await uploadImageToGCS(req.file)
+        }
+
         const product = await prisma.product.update({
             data: { ...productData },
             where: {
                 product_id,
             },
         })
-
-        // * Log for debugging
-        console.log('Update product')
-        console.log(product_id)
-        console.log(existingProduct)
-        console.log(product)
 
         res.json({ status: 'success', data: { product } })
     } catch (error) {
@@ -183,11 +191,16 @@ export const deleteProduct = async (
 
 // TODO:
 export const addProductVariant = async (
-    req: Request<{}, {}, ProductVariantInput>,
+    req: Request<{ product_id: string }, {}, ProductVariantInput>,
     res: Response,
     next: NextFunction
 ) => {
-    const { color, price, product_id, size, stock_quantity } = req.body
+    const product_id = parseInt(req.params.product_id, 10)
+    if (isNaN(product_id)) {
+        return next(createError(PRODUCT_ERRORS.INVALID_ID))
+    }
+
+    const { color, price, size, stock_quantity } = req.body
     try {
         const existingProductVariant = await prisma.productVariant.findUnique({
             where: {
@@ -213,7 +226,7 @@ export const addProductVariant = async (
 }
 
 export const updateProductVariant = async (
-    req: Request<{ variant_id: string }, {}, ProductVariantInput>,
+    req: Request<{ variant_id: string }, {}, ProductVariantUpdate>,
     res: Response,
     next: NextFunction
 ) => {

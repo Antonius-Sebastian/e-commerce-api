@@ -111,3 +111,61 @@ export const CATEGORY_ERRORS = {
         statusCode: 401,
     },
 }
+
+export const ORDER_ERRORS = {
+    NOT_FOUND: {
+        message: 'Order does not exist or could not be found.',
+        statusCode: 404,
+    },
+    ITEMS_REQUIRED: {
+        message: 'Order must contain at least one item.',
+        statusCode: 400,
+    },
+    INVALID_STATUS: {
+        message: 'Invalid order status provided.',
+        statusCode: 400,
+    },
+    INSUFFICIENT_STOCK: {
+        message: 'One or more items in this order have insufficient stock.',
+        statusCode: 400,
+    },
+    UNAUTHORIZED: {
+        message: 'You are not authorized to access or modify this order.',
+        statusCode: 403,
+    },
+    CANNOT_MODIFY: {
+        message: 'This order cannot be modified in its current status.',
+        statusCode: 400,
+    },
+    PAYMENT_REQUIRED: {
+        message: 'Payment is required to complete this order.',
+        statusCode: 402,
+    },
+    ITEM_NOT_FOUND: {
+        message: 'One or more order items could not be found.',
+        statusCode: 404,
+    },
+    PRODUCT_UNAVAILABLE: {
+        message: 'One or more products in this order are no longer available.',
+        statusCode: 400,
+    },
+    VALIDATION_ERROR: {
+        message: 'Order data validation failed.',
+        statusCode: 400,
+    },
+}
+
+export const ORDER_ITEM_ERRORS = {
+    NOT_FOUND: {
+        message: 'Order item does not exist or could not be found.',
+        statusCode: 404,
+    },
+    INVALID_QUANTITY: {
+        message: 'Invalid quantity specified for order item.',
+        statusCode: 400,
+    },
+    PRODUCT_NOT_FOUND: {
+        message: 'Product variant specified in order item does not exist.',
+        statusCode: 404,
+    },
+}
