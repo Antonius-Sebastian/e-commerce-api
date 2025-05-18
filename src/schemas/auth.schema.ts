@@ -16,9 +16,13 @@ export const userSchema = z.object({
             /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
             'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
         ),
-    address: z.string().min(5, 'Address must be at least 5 characters'),
-    phone_number: z.string().min(10, 'Phone number must be at least 10 digits'),
-    role: z.enum([Role.ADMIN, Role.USER]).optional(),
+    // TODO: add more validation
+    address: z
+        .string()
+        .min(5, 'Address must be at least 5 characters')
+        .max(100, 'Address must not exceed 100 characters'),
+    phone_number: z.string().regex(/^\d{10,15}$/, 'Phone number must be 10 to 15 digits'),
+    role: z.nativeEnum(Role).optional(),
 })
 
 export type UserInput = z.infer<typeof userSchema>

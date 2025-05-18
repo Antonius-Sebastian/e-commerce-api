@@ -5,7 +5,9 @@ import { JWT_SECRET } from '../config/env'
 import prisma from '../prisma/client'
 import { AppError } from '../utils/AppError'
 import { Role } from '@prisma/client'
-import { JwtPayload, User } from '../types/user'
+import { JwtPayload, User } from '../interfaces/user'
+import { createError } from '../utils/createError'
+import { AUTH_ERRORS, RESOURCE_ERRORS } from '../constants/error.constants'
 
 declare global {
     namespace Express {
@@ -24,7 +26,7 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
         }
 
         if (!token) {
-            throw new AppError('You are not logged in. Please log in to access.', 401)
+            return next(createError(AUTH_ERRORS.MISSING_AUTH))
         }
 
         const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload
@@ -47,7 +49,7 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
         console.log(user)
 
         if (!user) {
-            throw new AppError('The user belonging to this token no longer exists.', 403)
+            return next(createError(AUTH_ERRORS.USER_NOT_FOUND))
         }
 
         req.user = user
@@ -55,11 +57,11 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
     } catch (error) {
         if (error instanceof jwt.JsonWebTokenError) {
             if (error instanceof jwt.TokenExpiredError) {
-                return next(new AppError('Your token has expired. Please log in again.', 401))
+                return next(createError(AUTH_ERRORS.TOKEN_EXPIRED))
             } else if (error instanceof jwt.NotBeforeError) {
-                return next(new AppError('Token not yet active. Please try again later.', 401))
+                return next(createError(AUTH_ERRORS.TOKEN_VERIFICATION_FAILED))
             } else {
-                return next(new AppError('Invalid token. Please log in again.', 401))
+                return next(createError(AUTH_ERRORS.TOKEN_INVALID))
             }
         }
         next(error)
@@ -73,7 +75,7 @@ export const restrictTo = (...roles: Role[]) => {
         console.log(req.user)
 
         if (!req.user || !roles.includes(req.user.role)) {
-            return next(new AppError('Forbidden Access', 403))
+            return next(createError(RESOURCE_ERRORS.UNAUTHORIZED_ACCESS))
         }
         next()
     }

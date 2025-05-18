@@ -1,4 +1,6 @@
 import express from 'express'
+import swaggerUi from 'swagger-ui-express'
+import swaggerOutput from './swagger_output.json'
 
 import { PORT } from './config/env'
 import prisma from './prisma/client'
@@ -7,6 +9,7 @@ import { errorMiddleware } from './middlewares/error.middleware'
 import authRouter from './routes/auth.routes'
 import productRouter from './routes/product.routes'
 import userRouter from './routes/user.routes'
+import categoryRouter from './routes/category.routes'
 
 const app = express()
 
@@ -15,12 +18,15 @@ app.use(express.json())
 app.use('/api/auth', authRouter)
 app.use('/api/users', userRouter)
 app.use('/api/products', productRouter)
+app.use('/api/categories', categoryRouter)
 
 app.get('/', (req, res) => {
     res.json({ message: 'Welcome to the Store API!' })
 })
 
 app.use(errorMiddleware)
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerOutput))
 
 app.listen(PORT, () => {
     console.log(`Store API is running on http://localhost:${PORT}`)

@@ -3,9 +3,10 @@ import bcrypt from 'bcryptjs'
 
 import prisma from '../prisma/client'
 import { AppError } from '../utils/AppError'
-import { UserInput } from '../schemas/authSchema'
-import { User } from '../types/user'
-import { Prisma } from '@prisma/client'
+import { UserInput } from '../schemas/auth.schema'
+import { User } from '../interfaces/user'
+import { createError } from '../utils/createError'
+import { AUTH_ERRORS, RESOURCE_ERRORS, USER_ERRORS } from '../constants/error.constants'
 
 declare global {
     namespace Express {
@@ -28,22 +29,64 @@ export const getUsers = async (req: Request, res: Response, next: NextFunction) 
     }
 }
 
-export const getUser = async (req: Request, res: Response, next: NextFunction) => {
+export const getUser = async (
+    req: Request<{ user_id: string }, {}, {}>,
+    res: Response,
+    next: NextFunction
+) => {
+    const { user_id } = req.params
     try {
+        if (!req.user) {
+            return next(createError(AUTH_ERRORS.MISSING_AUTH))
+        }
+
+        if (req.user.role !== 'ADMIN' && req.user.user_id !== user_id) {
+            return next(createError(AUTH_ERRORS.INSUFFICIENT_PERMISSIONS))
+        }
+
         const user = await prisma.user.findUnique({
             where: {
-                user_id: req.params.user_id,
+                user_id: user_id,
             },
             omit: {
                 password: true,
             },
         })
 
+        // * Log for debugging
+        console.log('get user')
+        console.log(user_id)
+        console.log(user)
+
         if (!user) {
-            throw new AppError('User not found', 404)
+            return next(createError(USER_ERRORS.NOT_FOUND))
         }
 
         res.json({ message: 'success', data: { user } })
+    } catch (error) {
+        next(error)
+    }
+}
+
+// TODO: search based on query, username, email, role
+export const searchUsers = async (req: Request, res: Response, next: NextFunction) => {
+    const { keyword } = req.query
+
+    try {
+        const users = await prisma.user.findMany({
+            where: {
+                OR: [
+                    { name: { contains: String(keyword), mode: 'insensitive' } },
+                    { email: { contains: String(keyword), mode: 'insensitive' } },
+                ],
+            },
+        })
+        // * Log for debugging
+        console.log('search user')
+        console.log(keyword)
+        console.log(users)
+
+        res.json({ status: 'success', data: { users } })
     } catch (error) {
         next(error)
     }
@@ -59,7 +102,7 @@ export const addUser = async (
         // Check if user already exists
         const existingUser = await prisma.user.findUnique({ where: { email } })
         if (existingUser) {
-            throw new AppError('User already exists', 401)
+            return next(createError(USER_ERRORS.ALREADY_EXISTS))
         }
 
         // Hash password
@@ -103,17 +146,17 @@ export const updateUser = async (
     try {
         // Only admin can update anyone, user can update self
         if (!req.user) {
-            throw new AppError('Unauthorized', 401)
+            return next(createError(AUTH_ERRORS.MISSING_AUTH))
         }
 
         if (req.user.role !== 'ADMIN' && req.user.user_id !== user_id) {
-            throw new AppError('You are not allowed to update this user', 403)
+            return next(createError(AUTH_ERRORS.INSUFFICIENT_PERMISSIONS))
         }
 
-        // Check if user  exists
+        // Check if user exists
         const existingUser = await prisma.user.findUnique({ where: { user_id } })
         if (!existingUser) {
-            throw new AppError('User not found', 404)
+            return next(createError(USER_ERRORS.NOT_FOUND))
         }
 
         let hashedPassword = existingUser.password
@@ -169,30 +212,6 @@ export const deleteUser = async (
             },
         })
         res.json({ status: 'success', data: { user } })
-    } catch (error) {
-        next(error)
-    }
-}
-
-// TODO: Search user controller
-export const searchUsers = async (req: Request, res: Response, next: NextFunction) => {
-    const { keyword } = req.query
-
-    try {
-        const users = await prisma.user.findMany({
-            where: {
-                OR: [
-                    { name: { contains: String(keyword), mode: 'insensitive' } },
-                    { email: { contains: String(keyword), mode: 'insensitive' } },
-                ],
-            },
-        })
-        // * Log for debugging
-        console.log('search user')
-        console.log(keyword)
-        console.log(users)
-
-        res.json({ status: 'success', data: { users } })
     } catch (error) {
         next(error)
     }

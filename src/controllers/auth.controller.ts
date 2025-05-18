@@ -3,10 +3,11 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 
 import prisma from '../prisma/client'
-import { AppError } from '../utils/AppError'
 import { JWT_SECRET } from '../config/env'
-import { SignInInput, UserInput } from '../schemas/authSchema'
-import { JwtPayload } from '../types/user'
+import { SignInInput, UserInput } from '../schemas/auth.schema'
+import { JwtPayload } from '../interfaces/user'
+import { AUTH_ERRORS, USER_ERRORS } from '../constants/error.constants'
+import { createError } from '../utils/createError'
 
 export const signIn = async (
     req: Request<{}, {}, SignInInput>,
@@ -23,14 +24,14 @@ export const signIn = async (
         })
 
         if (!user) {
-            throw new AppError('Invalid credentials', 401)
+            return next(createError(AUTH_ERRORS.INVALID_CREDENTIALS))
         }
 
         // Check if password valids
         const isPasswordValid = await bcrypt.compare(password, user.password)
 
         if (!isPasswordValid) {
-            throw new AppError('Invalid credentials', 401)
+            return next(createError(AUTH_ERRORS.INVALID_CREDENTIALS))
         }
 
         const payload: JwtPayload = {
@@ -62,7 +63,7 @@ export const signUp = async (
         // Check if user already exists
         const existingUser = await prisma.user.findUnique({ where: { email } })
         if (existingUser) {
-            throw new AppError('Email is already in use', 409)
+            return next(createError(USER_ERRORS.ALREADY_EXISTS))
         }
 
         // Hash password
